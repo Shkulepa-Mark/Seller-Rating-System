@@ -29,7 +29,7 @@
 4.  **Phase 3: Admin Functionality (8h)**
     * Implement `AdminService` (or add to `UserService`):
         * `approveSeller(Long userId)`: Sets `User.status = ACTIVE`.
-        * `declineSeller(Long userId)`.
+        * `declineSeller(Long userId)`
     * Implement `CommentService`:
         * `getPendingComments()`
         * `approveComment(Long commentId)`
