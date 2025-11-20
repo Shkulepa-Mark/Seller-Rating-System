@@ -6,6 +6,7 @@ import com.ratingsystem.dto.request.RegisterRequest;
 import com.ratingsystem.entity.User;
 import com.ratingsystem.enums.Role;
 import com.ratingsystem.enums.UserStatus;
+import com.ratingsystem.exception.ResourceNotFoundException;
 import com.ratingsystem.exception.UserAlreadyExistsException;
 import com.ratingsystem.repository.UserRepository;
 import com.ratingsystem.security.JwtTokenProvider;
@@ -86,7 +87,7 @@ public class AuthService {
 
         Long userId = Long.parseLong(userIdStr);
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found for activation"));
 
         user.setStatus(UserStatus.PENDING_APPROVAL);
         userRepository.save(user);

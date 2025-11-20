@@ -4,6 +4,9 @@ import com.ratingsystem.dto.request.RegisterRequest;
 import com.ratingsystem.entity.User;
 import com.ratingsystem.enums.Role;
 import com.ratingsystem.enums.UserStatus;
+import com.ratingsystem.exception.InvalidOperationException;
+import com.ratingsystem.exception.ResourceNotFoundException;
+import com.ratingsystem.exception.UserAlreadyExistsException;
 import com.ratingsystem.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,7 +23,7 @@ public class AdminService {
     @Transactional
     public void createAdmin(RegisterRequest request) {
         if (userRepository.findByEmail(request.email()).isPresent()) {
-            throw new RuntimeException("Email already in use");
+            throw new UserAlreadyExistsException("Email " + request.email() + " is already in use");
         }
 
         User admin = new User();
@@ -32,5 +35,27 @@ public class AdminService {
         admin.setStatus(UserStatus.ACTIVE);
 
         userRepository.save(admin);
+    }
+
+    @Transactional
+    public void approveSeller(Long sellerId) {
+        User seller = userRepository.findById(sellerId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + sellerId));
+
+        if (seller.getRole() != Role.ROLE_SELLER) {
+            throw new InvalidOperationException("User with id " + sellerId + " is not a seller");
+        }
+
+        seller.setStatus(UserStatus.ACTIVE);
+        userRepository.save(seller);
+    }
+
+    @Transactional
+    public void declineSeller(Long sellerId) {
+        User seller = userRepository.findById(sellerId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + sellerId));
+
+        seller.setStatus(UserStatus.DECLINED);
+        userRepository.save(seller);
     }
 }
