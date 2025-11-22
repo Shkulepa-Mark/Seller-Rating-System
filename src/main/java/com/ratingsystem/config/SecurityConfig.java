@@ -51,6 +51,7 @@ public class SecurityConfig {
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/sellers/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/game-objects").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/games").permitAll()
 
                         // anonymous
                         .requestMatchers(HttpMethod.POST, "/sellers/*/comments").permitAll()

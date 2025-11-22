@@ -63,4 +63,10 @@ public class CommentController {
         commentService.deleteComment(commentId, principal.getName());
         return ResponseEntity.ok("Comment deleted.");
     }
+
+    @GetMapping("/{commentId}")
+    public ResponseEntity<CommentResponse> getComment(@PathVariable("sellerId") Long sellerId,
+                                                      @PathVariable("commentId") Long commentId) {
+        return ResponseEntity.ok(commentService.getCommentById(commentId));
+    }
 }

@@ -144,4 +144,11 @@ public class CommentService {
             ratingService.updateSellerRating(comment.getSeller().getId());
         }
     }
+
+    @Transactional(readOnly = true)
+    public CommentResponse getCommentById(Long commentId) {
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Comment not found"));
+        return mapToResponse(comment);
+    }
 }
