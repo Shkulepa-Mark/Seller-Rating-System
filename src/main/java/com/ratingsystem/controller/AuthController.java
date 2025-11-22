@@ -1,7 +1,9 @@
 package com.ratingsystem.controller;
 
+import com.ratingsystem.dto.request.ForgotPasswordRequest;
 import com.ratingsystem.dto.request.LoginRequest;
 import com.ratingsystem.dto.request.RegisterRequest;
+import com.ratingsystem.dto.request.ResetPasswordRequest;
 import com.ratingsystem.dto.response.LoginResponse;
 import com.ratingsystem.service.AuthService;
 import jakarta.validation.Valid;
@@ -40,5 +42,26 @@ public class AuthController {
         } else {
             return ResponseEntity.badRequest().body("Invalid or expired token.");
         }
+    }
+
+    @PostMapping("/forgot_password")
+    public ResponseEntity<String> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        authService.forgotPassword(request);
+        return ResponseEntity.ok("Reset code sent to your email.");
+    }
+
+    @GetMapping("/check_code")
+    public ResponseEntity<String> checkCode(@RequestParam("code") String code) {
+        if (authService.checkResetCode(code)) {
+            return ResponseEntity.ok("Code is valid.");
+        } else {
+            return ResponseEntity.badRequest().body("Invalid code.");
+        }
+    }
+
+    @PostMapping("/reset")
+    public ResponseEntity<String> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        authService.resetPassword(request);
+        return ResponseEntity.ok("Password reset successfully.");
     }
 }
