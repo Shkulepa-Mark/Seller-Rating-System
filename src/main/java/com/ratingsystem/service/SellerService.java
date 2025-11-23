@@ -1,12 +1,17 @@
 package com.ratingsystem.service;
 
+import com.ratingsystem.dto.request.SellerCreationRequest;
 import com.ratingsystem.dto.response.SellerResponse;
+import com.ratingsystem.entity.Comment;
 import com.ratingsystem.entity.GameObject;
 import com.ratingsystem.entity.SellerRating;
 import com.ratingsystem.entity.User;
+import com.ratingsystem.enums.CommentStatus;
 import com.ratingsystem.enums.Role;
 import com.ratingsystem.enums.UserStatus;
 import com.ratingsystem.exception.ResourceNotFoundException;
+import com.ratingsystem.exception.UserAlreadyExistsException;
+import com.ratingsystem.repository.CommentRepository;
 import com.ratingsystem.repository.UserRepository;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Join;
@@ -20,22 +25,25 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class SellerService {
 
     private final UserRepository userRepository;
+    private final CommentRepository commentRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional(readOnly = true)
     public Page<SellerResponse> getAllSellers(Double minRating, Double maxRating, String gameName, Pageable pageable) {
-
         boolean isRatingSort = pageable.getSort().stream()
                 .anyMatch(o -> o.getProperty().equals("rating") || o.getProperty().equals("rating.ratingValue"));
 
@@ -56,11 +64,13 @@ public class SellerService {
 
             Join<User, SellerRating> ratingJoin = root.join("rating", JoinType.LEFT);
 
+            Expression<BigDecimal> ratingValue = cb.coalesce(ratingJoin.get("ratingValue"), BigDecimal.ZERO);
+
             if (minRating != null) {
-                predicates.add(cb.greaterThanOrEqualTo(ratingJoin.get("ratingValue"), BigDecimal.valueOf(minRating)));
+                predicates.add(cb.greaterThanOrEqualTo(ratingValue, BigDecimal.valueOf(minRating)));
             }
             if (maxRating != null) {
-                predicates.add(cb.lessThanOrEqualTo(ratingJoin.get("ratingValue"), BigDecimal.valueOf(maxRating)));
+                predicates.add(cb.lessThanOrEqualTo(ratingValue, BigDecimal.valueOf(maxRating)));
             }
 
             if (gameName != null && !gameName.isBlank()) {
@@ -75,15 +85,13 @@ public class SellerService {
             }
 
             if (isRatingSort) {
-                Expression<Number> sortExpr = cb.coalesce(ratingJoin.get("ratingValue"), 0.0);
-
                 Sort.Order order = pageable.getSort().getOrderFor("rating");
                 if (order == null) order = pageable.getSort().getOrderFor("rating.ratingValue");
 
                 if (order != null && order.isDescending()) {
-                    query.orderBy(cb.desc(sortExpr));
+                    query.orderBy(cb.desc(ratingValue));
                 } else {
-                    query.orderBy(cb.asc(sortExpr));
+                    query.orderBy(cb.asc(ratingValue));
                 }
             }
 
@@ -119,5 +127,40 @@ public class SellerService {
                 rating,
                 u.getCreatedAt()
         );
+    }
+
+    @Transactional
+    public void requestSellerCreation(SellerCreationRequest request) {
+        if (userRepository.findByEmail(request.email()).isPresent()) {
+            throw new UserAlreadyExistsException("Seller with this email already exists");
+        }
+
+        User seller = new User();
+        seller.setFirstName(request.firstName());
+        seller.setLastName(request.lastName());
+        seller.setEmail(request.email());
+        seller.setRole(Role.ROLE_SELLER);
+        seller.setStatus(UserStatus.PENDING_APPROVAL);
+
+        String randomPass = UUID.randomUUID().toString();
+        seller.setPassword(passwordEncoder.encode(randomPass));
+
+        User savedSeller = userRepository.save(seller);
+
+        Comment comment = new Comment();
+        comment.setSeller(savedSeller);
+        comment.setMessage(request.message());
+        comment.setRating(request.rating());
+        comment.setStatus(CommentStatus.PENDING);
+        comment.setAuthor(null);
+
+        commentRepository.save(comment);
+    }
+
+    @Transactional(readOnly = true)
+    public List<SellerResponse> getPendingSellers() {
+        return userRepository.findAllByStatus(UserStatus.PENDING_APPROVAL).stream()
+                .map(this::mapToResponse)
+                .toList();
     }
 }

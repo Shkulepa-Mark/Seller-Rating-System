@@ -2,8 +2,10 @@ package com.ratingsystem.controller;
 
 import com.ratingsystem.dto.request.RegisterRequest;
 import com.ratingsystem.dto.response.CommentResponse;
+import com.ratingsystem.dto.response.SellerResponse;
 import com.ratingsystem.service.AdminService;
 import com.ratingsystem.service.CommentService;
+import com.ratingsystem.service.SellerService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +25,12 @@ public class AdminController {
 
     private final AdminService adminService;
     private final CommentService commentService;
+    private final SellerService sellerService;
+
+    @GetMapping("/users/pending")
+    public ResponseEntity<List<SellerResponse>> getPendingSellers() {
+        return ResponseEntity.ok(sellerService.getPendingSellers());
+    }
 
     @PostMapping("/create-admin")
     public ResponseEntity<String> createAdmin(@Valid @RequestBody RegisterRequest request) {

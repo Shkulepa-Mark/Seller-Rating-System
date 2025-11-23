@@ -55,6 +55,7 @@ public class SecurityConfig {
 
                         // anonymous
                         .requestMatchers(HttpMethod.POST, "/sellers/*/comments").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/sellers/requests").permitAll()
 
                         // admin
                         .requestMatchers("/admin/**").hasAuthority("ROLE_ADMIN")
