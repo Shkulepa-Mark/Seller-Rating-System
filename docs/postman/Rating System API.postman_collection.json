@@ -1,0 +1,929 @@
+{
+	"info": {
+		"_postman_id": "d6ae29f4-e8b1-47af-b8a1-79e87854045d",
+		"name": "Rating System API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "42864281"
+	},
+	"item": [
+		{
+			"name": "1. Auth & Setup",
+			"item": [
+				{
+					"name": "Login as Admin",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Login as Admin — success\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"    \r",
+									"    const json = pm.response.json();\r",
+									"    const token = json.token;\r",
+									"    \r",
+									"    pm.environment.set(\"adminToken\", token);\r",
+									"    console.log(\"Admin token saved:\", token.substring(0, 20) + \"...\");\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"email\": \"admin@rating.com\", \"password\": \"admin123\"}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Register New Seller",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Сохраняем sellerId после регистрации\", function () {\r",
+									"    const json = pm.response.json();\r",
+									"    if (json.id) {\r",
+									"        pm.environment.set(\"sellerId\", json.id);\r",
+									"        console.log(\"sellerId сохранён:\", json.id);\r",
+									"    }\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"firstName\": \"Bill\",\r\n    \"lastName\": \"Seller\",\r\n    \"email\": \"lesap971@gmail.com\",\r\n    \"password\": \"sellerPass123\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login as Seller (after approve)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Login Seller — success\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"\r",
+									"    const json = pm.response.json();\r",
+									"    const token = json.token;\r",
+									"\r",
+									"    pm.environment.set(\"sellerToken\", token);\r",
+									"    console.log(\"Seller token saved\");\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"email\": \"lesap971@gmail.com\",\r\n    \"password\": \"sellerPass123\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Forgot Password",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"email\": \"lesap971@gmail.com\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/forgot_password",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"forgot_password"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Check code",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "Reset Password",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"code\": \"f203e447-2ed6-4abf-b797-0d64adc0b8be\",\r\n    \"newPassword\": \"newPass123\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/reset",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"reset"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "2. Admin Workflow",
+			"item": [
+				{
+					"name": "Create New Admin",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"firstName\": \"Help\",\r\n    \"lastName\": \"Admin\",\r\n    \"email\": \"helper@rating.com\",\r\n    \"password\": \"123\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/admin/create-admin",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"create-admin"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Approve Seller",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/admin/users/{{sellerId}}/approve",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"users",
+								"{{sellerId}}",
+								"approve"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Decline Seller",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/admin/users/{{sellerId}}/decline",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"users",
+								"{{sellerId}}",
+								"decline"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Pending Comments",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/admin/comments/pending",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"comments",
+								"pending"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Approve Comment",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/admin/comments/{{commentId}}/approve",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"comments",
+								"{{commentId}}",
+								"approve"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Decline Comment",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/admin/comments/{{commentId}}/decline",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"admin",
+								"comments",
+								"{{commentId}}",
+								"decline"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get pending users",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				}
+			],
+			"auth": {
+				"type": "bearer",
+				"bearer": [
+					{
+						"key": "token",
+						"value": "{{adminToken}}",
+						"type": "string"
+					}
+				]
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {},
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {},
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "3. Seller Workflow",
+			"item": [
+				{
+					"name": "Add Comment (seller)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{sellerToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"message\": \"bad\",\r\n    \"rating\": 1.0\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/sellers/16/comments",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"sellers",
+								"16",
+								"comments"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update My Comment",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{sellerToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"message\": \"Implemented screenshot\",\r\n    \"rating\": 5.0\r\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/sellers/16/comments/2",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"sellers",
+								"16",
+								"comments",
+								"2"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete My Comment",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{sellerToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/sellers/3/comments/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"sellers",
+								"3",
+								"comments",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Game Object",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Сохраняем gameObjectId после создания\", function () {\r",
+									"    pm.response.to.have.status(200); // или 201, если у тебя Created\r",
+									"\r",
+									"    const responseJson = pm.response.json();\r",
+									"\r",
+									"    // В твоём контроллере ты возвращаешь GameObjectResponse, у которого есть поле id\r",
+									"    if (responseJson.id) {\r",
+									"        pm.environment.set(\"gameObjectId\", responseJson.id.toString());\r",
+									"        console.log(\"gameObjectId успешно сохранён:\", responseJson.id);\r",
+									"    } else {\r",
+									"        console.log(\"Внимание! Поле id в ответе не найдено:\", responseJson);\r",
+									"    }\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"title\": \"AWP | Dragon Lore (Factory New)\",\r\n    \"text\": \"Float 0.009, 4x Titan (Holo)\",\r\n    \"gameId\": 1\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/game-objects",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"game-objects"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Game Object",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"title\": \"AWP | Dragon Lore (FN) + 4x Titan\",\r\n    \"text\": \"Best float on market\",\r\n    \"gameId\": 1\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/game-objects/{{gameObjectId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"game-objects",
+								"{{gameObjectId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Game Object",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/game-objects/{{gameObjectId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"game-objects",
+								"{{gameObjectId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"auth": {
+				"type": "bearer",
+				"bearer": [
+					{
+						"key": "token",
+						"value": "{{sellerToken}}",
+						"type": "string"
+					}
+				]
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {},
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {},
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "4. Public & Guests",
+			"item": [
+				{
+					"name": "Get All Sellers (Filter)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/sellers?minRating=4.0&sort=rating,desc",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"sellers"
+							],
+							"query": [
+								{
+									"key": "minRating",
+									"value": "4.0"
+								},
+								{
+									"key": "sort",
+									"value": "rating,desc"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Single Seller",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/sellers/{{sellerId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"sellers",
+								"{{sellerId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Seller Comments",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/sellers/{{sellerId}}/comments",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"sellers",
+								"{{sellerId}}",
+								"comments"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Games List",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/games",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"games"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Game Objects",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/game-objects",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"game-objects"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create seller via comment",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"firstName\": \"New\",\r\n    \"lastName\": \"Star\",\r\n    \"email\": \"lesap9722@gmail.com\",\r\n    \"message\": \"I bought from him offline, great guy!\",\r\n    \"rating\": 5\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/sellers/requests",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"sellers",
+								"requests"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add comment (guest)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/sellers3/comments",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"sellers3",
+								"comments"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Update My Comment",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{sellerToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"message\": \"Implemented screenshot\",\r\n    \"rating\": 5.0\r\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/sellers/16/comments/2",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"sellers",
+						"16",
+						"comments",
+						"2"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Add Comment (seller)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{sellerToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"message\": \"bad\",\r\n    \"rating\": 1.0\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/sellers/16/comments",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"sellers",
+						"16",
+						"comments"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{currentBearerToken}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}
