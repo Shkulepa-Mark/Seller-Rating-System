@@ -19,6 +19,7 @@ This project is built on **Spring Framework 6** (without Spring Boot).
 - [Architecture & Database](#-architecture--database)
 - [Quick Start (Docker)](#-quick-start-docker)
 - [System Initialization](#-system-initialization)
+- [API Reference](#-api-reference)
 - [API Documentation & Testing](#-api-documentation--testing)
 - [Usage Scenarios (User Flow)](#-usage-scenarios-user-flow)
 
@@ -88,6 +89,60 @@ To avoid working with an empty database, the system runs `Initializers` (Data Se
 3.  **GameInitializer** fills the catalog with popular games: *Counter-Strike 2, Dota 2, Minecraft, FIFA 24, Rust, Valorant, Team Fortress 2*.
 
 ---
+
+## 📡 API Reference
+
+Here is the full list of available REST endpoints grouped by their functionality.
+
+### 🔐 Auth Controller (`/auth`)
+| Method | Endpoint | Description | Access |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/auth/login` | Authenticate user and get JWT token | Public |
+| `POST` | `/auth/register` | Register a new Seller account | Public |
+| `GET` | `/auth/confirm` | Confirm email address via token | Public |
+| `POST` | `/auth/forgot_password` | Request password reset code via email | Public |
+| `GET` | `/auth/check_code` | Verify if the reset code is valid | Public |
+| `POST` | `/auth/reset` | Set a new password using valid code | Public |
+
+### 👮‍♂️ Admin Controller (`/admin`)
+| Method | Endpoint | Description | Access |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/admin/users/pending` | Get list of sellers waiting for approval | **ADMIN** |
+| `POST` | `/admin/users/{id}/approve` | Approve a seller account (Status -> ACTIVE) | **ADMIN** |
+| `POST` | `/admin/users/{id}/decline` | Decline seller registration | **ADMIN** |
+| `GET` | `/admin/comments/pending` | Get list of comments waiting for moderation | **ADMIN** |
+| `POST` | `/admin/comments/{id}/approve` | Approve a comment (Updates Seller Rating) | **ADMIN** |
+| `POST` | `/admin/comments/{id}/decline` | Decline (delete) a comment | **ADMIN** |
+| `POST` | `/admin/create-admin` | Create a new Administrator account | **ADMIN** |
+
+### 🛍️ Seller Controller (`/sellers`)
+| Method | Endpoint | Description | Access |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/sellers` | Get public list of sellers (supports filtering by Rating & Game) | Public |
+| `GET` | `/sellers/{id}` | Get details of a specific seller | Public |
+| `POST` | `/sellers/requests` | Anonymous request to create a missing seller profile | Public |
+
+### 💬 Comment Controller (`/sellers/{id}/comments`)
+| Method | Endpoint | Description | Access |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/sellers/{id}/comments` | Get approved comments for a seller | Public |
+| `GET` | `/sellers/{id}/comments/{cId}` | Get a specific comment details | Public |
+| `POST` | `/sellers/{id}/comments` | Leave a comment (Pending moderation) | Public (Guest) |
+| `PUT` | `/sellers/{id}/comments/{cId}` | Edit a comment (Sends back to moderation) | **Author** |
+| `DELETE` | `/sellers/{id}/comments/{cId}` | Delete a comment | **Author** |
+
+### 📦 Game Object Controller (`/game-objects`)
+| Method | Endpoint | Description | Access |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/game-objects` | Get all game items (inventory) | Public |
+| `POST` | `/game-objects` | Create a new item | **SELLER** |
+| `PUT` | `/game-objects/{id}` | Update an item | **SELLER (Owner)** |
+| `DELETE` | `/game-objects/{id}` | Delete an item | **SELLER (Owner)** |
+
+### 🎮 Game Controller (`/games`)
+| Method | Endpoint | Description | Access |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/games` | Get list of supported games (CS2, Dota 2, etc.) | Public |
 
 ## 🧪 API Documentation & Testing
 
