@@ -1,5 +1,6 @@
 package com.ratingsystem.config;
 
+import com.ratingsystem.enums.Role;
 import com.ratingsystem.security.JwtTokenFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -58,12 +59,12 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/sellers/requests").permitAll()
 
                         // admin
-                        .requestMatchers("/admin/**").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers("/admin/**").hasAuthority(Role.ROLE_ADMIN.name())
 
                         // seller
-                        .requestMatchers(HttpMethod.POST, "/game-objects").hasAuthority("ROLE_SELLER")
-                        .requestMatchers(HttpMethod.PUT, "/game-objects/*").hasAuthority("ROLE_SELLER")
-                        .requestMatchers(HttpMethod.DELETE, "/game-objects/*").hasAuthority("ROLE_SELLER")
+                        .requestMatchers(HttpMethod.POST, "/game-objects").hasAuthority(Role.ROLE_SELLER.name())
+                        .requestMatchers(HttpMethod.PUT, "/game-objects/*").hasAuthority(Role.ROLE_SELLER.name())
+                        .requestMatchers(HttpMethod.DELETE, "/game-objects/*").hasAuthority(Role.ROLE_SELLER.name())
 
                         // others
                         .anyRequest().authenticated()

@@ -42,6 +42,9 @@ public class SellerService {
     private final CommentRepository commentRepository;
     private final PasswordEncoder passwordEncoder;
 
+    private static final BigDecimal DEFAULT_RATING_VALUE = BigDecimal.ZERO;
+    private static final double DEFAULT_RATING = 0.0;
+
     @Transactional(readOnly = true)
     public Page<SellerResponse> getAllSellers(Double minRating, Double maxRating, String gameName, Pageable pageable) {
         boolean isRatingSort = pageable.getSort().stream()
@@ -64,7 +67,7 @@ public class SellerService {
 
             Join<User, SellerRating> ratingJoin = root.join("rating", JoinType.LEFT);
 
-            Expression<BigDecimal> ratingValue = cb.coalesce(ratingJoin.get("ratingValue"), BigDecimal.ZERO);
+            Expression<BigDecimal> ratingValue = cb.coalesce(ratingJoin.get("ratingValue"), DEFAULT_RATING_VALUE);
 
             if (minRating != null) {
                 predicates.add(cb.greaterThanOrEqualTo(ratingValue, BigDecimal.valueOf(minRating)));
@@ -117,7 +120,7 @@ public class SellerService {
     private SellerResponse mapToResponse(User u) {
         double rating = u.getRating() != null && u.getRating().getRatingValue() != null
                 ? u.getRating().getRatingValue().doubleValue()
-                : 0.0;
+                : DEFAULT_RATING;
 
         return new SellerResponse(
                 u.getId(),

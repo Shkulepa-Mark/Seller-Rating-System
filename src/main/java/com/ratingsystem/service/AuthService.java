@@ -39,6 +39,11 @@ public class AuthService {
     private final RedisTemplate<String, Object> redisTemplate;
     private final EmailService emailService;
 
+    private static final long CONFIRMATION_LINK_TTL_HOURS = 24;
+    private static final long RESET_CODE_TTL_HOURS = 1;
+    private static final String CONFIRM_KEY_PREFIX = "confirm_token:";
+    private static final String RESET_KEY_PREFIX = "reset_token:";
+
     @Transactional
     public LoginResponse login(LoginRequest loginRequest) {
         Authentication authentication = authenticationManager.authenticate(
@@ -69,9 +74,9 @@ public class AuthService {
         User savedUser = userRepository.save(user);
 
         String token = UUID.randomUUID().toString();
-        String key = "confirm_token:" + token;
+        String key = CONFIRM_KEY_PREFIX + token;
 
-        redisTemplate.opsForValue().set(key, savedUser.getId().toString(), 24, TimeUnit.HOURS);
+        redisTemplate.opsForValue().set(key, savedUser.getId().toString(), CONFIRMATION_LINK_TTL_HOURS, TimeUnit.HOURS);
 
         String link = "http://localhost:8080/seller-rating-system/auth/confirm?token=" + token;
         String subject = "Confirm your Seller Registration";
@@ -87,7 +92,7 @@ public class AuthService {
 
     @Transactional
     public boolean confirmEmail(String token) {
-        String key = "confirm_token:" + token;
+        String key = CONFIRM_KEY_PREFIX + token;
         String userIdStr = (String) redisTemplate.opsForValue().get(key);
 
         if (userIdStr == null) {
@@ -111,9 +116,9 @@ public class AuthService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         String code = UUID.randomUUID().toString();
-        String key = "reset_token:" + code;
+        String key = RESET_KEY_PREFIX + code;
 
-        redisTemplate.opsForValue().set(key, user.getId().toString(), 1, TimeUnit.HOURS);
+        redisTemplate.opsForValue().set(key, user.getId().toString(), RESET_CODE_TTL_HOURS, TimeUnit.HOURS);
 
         String subject = "Password Reset Request";
         String message = "Hello " + user.getFirstName() + ",\n\n" +
@@ -127,13 +132,13 @@ public class AuthService {
     }
 
     public boolean checkResetCode(String code) {
-        String key = "reset_token:" + code;
+        String key = RESET_KEY_PREFIX + code;
         return Boolean.TRUE.equals(redisTemplate.hasKey(key));
     }
 
     @Transactional
     public void resetPassword(ResetPasswordRequest request) {
-        String key = "reset_token:" + request.code();
+        String key = RESET_KEY_PREFIX + request.code();
         String userIdStr = (String) redisTemplate.opsForValue().get(key);
 
         if (userIdStr == null) {

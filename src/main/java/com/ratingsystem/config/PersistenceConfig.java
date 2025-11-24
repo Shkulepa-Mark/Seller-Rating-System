@@ -25,6 +25,8 @@ import java.util.Properties;
 @PropertySource("classpath:db.properties")
 public class PersistenceConfig {
 
+    private static final int MAX_POOL_SIZE = 10;
+
     @Bean
     public DataSource dataSource(Environment env) {
         HikariConfig config = new HikariConfig();
@@ -32,7 +34,7 @@ public class PersistenceConfig {
         config.setJdbcUrl(env.getProperty("db.url"));
         config.setUsername(env.getProperty("db.user"));
         config.setPassword(env.getProperty("db.password"));
-        config.setMaximumPoolSize(10);
+        config.setMaximumPoolSize(MAX_POOL_SIZE);
         return new HikariDataSource(config);
     }
 

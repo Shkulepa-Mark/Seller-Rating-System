@@ -23,6 +23,9 @@ public class RatingService {
     private final CommentRepository commentRepository;
     private final UserRepository userRepository;
 
+    private static final int RATING_SCALE = 2;
+    private static final double DEFAULT_RATING = 0.0;
+
     @Transactional
     public void updateSellerRating(Long sellerId) {
         User seller = userRepository.findById(sellerId)
@@ -37,10 +40,10 @@ public class RatingService {
         double average = approvedComments.stream()
                 .mapToInt(Comment::getRating)
                 .average()
-                .orElse(0.0);
+                .orElse(DEFAULT_RATING);
 
         BigDecimal ratingValue = BigDecimal.valueOf(average)
-                .setScale(2, RoundingMode.HALF_UP);
+                .setScale(RATING_SCALE, RoundingMode.HALF_UP);
 
         SellerRating rating = sellerRatingRepository.findById(sellerId)
                 .orElse(new SellerRating());
