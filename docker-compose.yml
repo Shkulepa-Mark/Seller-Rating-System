@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: rating-system-app
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+      - MAIL_USERNAME=${MAIL_USERNAME}
+      - MAIL_APP_PASSWORD=${MAIL_APP_PASSWORD}
+
+      - JAVA_OPTS=-Ddb.url=jdbc:postgresql://postgres:5432/seller_rating_db -Dredis.host=redis -Dredis.port=6379
+
+  postgres:
+    image: postgres:15
+    container_name: rating-system-db
+    environment:
+      POSTGRES_DB: seller_rating_db
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7
+    container_name: rating-system-redis
+    ports:
+      - "6379:6379"
+
+volumes:
+  postgres_data:

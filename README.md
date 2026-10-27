@@ -1,35 +1,182 @@
-# Seller Rating System
+# 🏆 Seller Rating System
 
-This project is a Java-based implementation of the "Seller Rating System", built using **Spring 6**.
+![Java](https://img.shields.io/badge/Java-21-orange)
+![Spring](https://img.shields.io/badge/Spring_Framework-6-green)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-blue)
+![Redis](https://img.shields.io/badge/Redis-Caching-red)
+![Docker](https://img.shields.io/badge/Docker-Ready-2496ED)
 
-The architecture follows a classic **Layered Monolith** pattern (Controller, Service, Repository) to ensure separation of concerns (SOLID).
+**Seller Rating System** is a RESTful API service for independent evaluation of game item sellers (CS2, Dota 2, Minecraft, etc.). 
 
-## Key Technologies
+The system ensures trust by allowing users (including anonymous guests) to leave comments and ratings, which are strictly moderated and verified by administrators before publication.
 
-* **Core:** Spring 6 (JavaConfig)
-* **Web:** Spring MVC (REST API)
-* **Security:** Spring Security 6 (JWT Authentication)
-* **Database:** Spring Data JPA (Hibernate)
-* **DB Migration:** Liquibase
-* **DB Connection:** PostgreSQL (with HikariCP)
-* **Cache:** Spring Data Redis (for confirmation tokens)
-* **Build:** Maven (packaged as a WAR)
+This project is built on **Spring Framework 6** (without Spring Boot).
 
 ---
 
-## How to Run
+## 📑 Table of Contents
+- [Tech Stack](#-tech-stack)
+- [Architecture & Database](#-architecture--database)
+- [Quick Start (Docker)](#-quick-start-docker)
+- [System Initialization](#-system-initialization)
+- [API Reference](#-api-reference)
+- [API Documentation & Testing](#-api-documentation--testing)
+- [Usage Scenarios (User Flow)](#-usage-scenarios-user-flow)
 
-This is **not** a Spring Boot application. It does not run from an embedded server.
+---
 
-1.  **Build the Project:**
+## 🛠 Tech Stack
+
+The project uses a modern Java development stack:
+
+* **Core:** Java 21, Spring Framework 6 (MVC, Security, Context, Data JPA)
+* **Database:** PostgreSQL 15
+* **Migration:** Liquibase (Database schema management)
+* **Caching:** Redis (Lettuce client)
+* **Security:** JWT (Access Tokens), BCrypt, Role-Based Access Control (RBAC)
+* **Testing:** JUnit 5, Mockito, **Testcontainers** (Real PostgreSQL in tests)
+* **DevOps:** Docker, Docker Compose, Tomcat 10
+* **Build Tool:** Maven (WAR packaging)
+
+---
+
+## 🗄 Architecture & Database
+
+The database is fully normalized and designed to ensure data integrity.
+
+![Database Schema](docs/db_schema.png)
+
+**Key Entities:**
+* `users`: Stores Administrators and Sellers.
+* `games`: Pre-installed game categories (CS2, Dota 2, etc.).
+* `game_objects`: Items (inventory) created by sellers.
+* `comments`: Reviews left by users or guests.
+* `seller_ratings`: Denormalized average rating value (stored separately to optimize read performance).
+
+---
+
+## 🚀 Quick Start (Docker)
+
+The best way to run the application is using Docker Compose. This ensures the App, Database, and Cache run in a perfectly configured environment.
+
+### Prerequisites
+* Docker Desktop (installed and running).
+* Postman (for API testing).
+
+### Instructions
+1.  **Open a terminal** in the project root folder (where `docker-compose.yml` is located).
+2.  Create the `.env` file or the `environment` section in `docker-compose.yml`.
+3.  **Build and Run:**
     ```bash
-    mvn clean package
+    docker-compose up --build
     ```
-2.  **Deploy the WAR:**
-    * Take the generated `seller-rating-system.war` file from the `/target/` directory.
-    * Deploy this file to an external Servlet Container (e.g., **Apache Tomcat 10**).
-3.  **Database & Cache:**
-    * Ensure you have a local **PostgreSQL** instance running with a database named `seller_rating_db`.
-    * Ensure you have a local **Redis** instance running on `localhost:6379`.
-4.  **Access:**
-    * The API will be available at `http://localhost:8080/seller-rating-system/` (or your Tomcat's port).
+    This command compiles the Java code, builds the WAR file, and sets up the network.
+
+4.  **Wait for startup.** You should see `Artifact is deployed successfully` in the logs.
+5.  The API is available at: `http://localhost:8080/seller-rating-system/`.
+
+---
+
+## ⚡ System Initialization
+
+To avoid working with an empty database, the system runs `Initializers` (Data Seeding) on the first start:
+
+1.  **Liquibase** creates the table structure.
+2.  **AdminInitializer** creates a Super-Admin (admin registration via API is disabled):
+    > **Login:** `admin@rating.com`
+    >
+    > **Password:** `admin123`
+3.  **GameInitializer** fills the catalog with popular games: *Counter-Strike 2, Dota 2, Minecraft, FIFA 24, Rust, Valorant, Team Fortress 2*.
+
+---
+
+## 📡 API Reference
+
+Here is the full list of available REST endpoints grouped by their functionality.
+
+### 🔐 Auth Controller (`/auth`)
+| Method | Endpoint | Description | Access |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/auth/login` | Authenticate user and get JWT token | Public |
+| `POST` | `/auth/register` | Register a new Seller account | Public |
+| `GET` | `/auth/confirm` | Confirm email address via token | Public |
+| `POST` | `/auth/forgot_password` | Request password reset code via email | Public |
+| `GET` | `/auth/check_code` | Verify if the reset code is valid | Public |
+| `POST` | `/auth/reset` | Set a new password using valid code | Public |
+
+### 👮‍♂️ Admin Controller (`/admin`)
+| Method | Endpoint | Description | Access |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/admin/users/pending` | Get list of sellers waiting for approval | **ADMIN** |
+| `POST` | `/admin/users/{id}/approve` | Approve a seller account (Status -> ACTIVE) | **ADMIN** |
+| `POST` | `/admin/users/{id}/decline` | Decline seller registration | **ADMIN** |
+| `GET` | `/admin/comments/pending` | Get list of comments waiting for moderation | **ADMIN** |
+| `POST` | `/admin/comments/{id}/approve` | Approve a comment (Updates Seller Rating) | **ADMIN** |
+| `POST` | `/admin/comments/{id}/decline` | Decline (delete) a comment | **ADMIN** |
+| `POST` | `/admin/create-admin` | Create a new Administrator account | **ADMIN** |
+
+### 🛍️ Seller Controller (`/sellers`)
+| Method | Endpoint | Description | Access |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/sellers` | Get public list of sellers (supports filtering by Rating & Game) | Public |
+| `GET` | `/sellers/{id}` | Get details of a specific seller | Public |
+| `POST` | `/sellers/requests` | Anonymous request to create a missing seller profile | Public |
+
+### 💬 Comment Controller (`/sellers/{id}/comments`)
+| Method | Endpoint | Description | Access |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/sellers/{id}/comments` | Get approved comments for a seller | Public |
+| `GET` | `/sellers/{id}/comments/{cId}` | Get a specific comment details | Public |
+| `POST` | `/sellers/{id}/comments` | Leave a comment (Pending moderation) | Public (Guest) |
+| `PUT` | `/sellers/{id}/comments/{cId}` | Edit a comment (Sends back to moderation) | **Author** |
+| `DELETE` | `/sellers/{id}/comments/{cId}` | Delete a comment | **Author** |
+
+### 📦 Game Object Controller (`/game-objects`)
+| Method | Endpoint | Description | Access |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/game-objects` | Get all game items (inventory) | Public |
+| `POST` | `/game-objects` | Create a new item | **SELLER** |
+| `PUT` | `/game-objects/{id}` | Update an item | **SELLER (Owner)** |
+| `DELETE` | `/game-objects/{id}` | Delete an item | **SELLER (Owner)** |
+
+### 🎮 Game Controller (`/games`)
+| Method | Endpoint | Description | Access |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/games` | Get list of supported games (CS2, Dota 2, etc.) | Public |
+
+## 🧪 API Documentation & Testing
+
+### Postman
+A complete collection for testing all scenarios is included in the repository:
+* 📥 **Collection:** `docs/postman/Rating System API.postman_collection.json`
+* 🌍 **Environment:** `docs/postman/Rating System Local.postman_environment.json`
+
+### Automated Tests (Local)
+The project is covered by Unit and Integration tests. Integration tests use **Testcontainers** to spin up a real PostgreSQL instance in Docker, ensuring 100% production compatibility.
+
+To run tests:
+```bash
+mvn test
+```
+
+## 🔄 Usage Scenarios (User Flow)
+
+It is recommended to run requests in the Postman collection in order, as they follow a logical chain:
+
+### 1. Auth & Setup
+1.  **Login** as the Super-Admin (credentials above) to get your first token.
+2.  Send a request to register a new **Seller**.
+3.  > **Important:** The system sends a real confirmation email. **Check your inbox** (or Spam folder) for the activation link. You must click this link to verify your account. Without this, the seller cannot log in.
+
+### 2. Admin Workflow
+1.  Use the Admin token to call the `Approve Seller` endpoint. Only after approval does the seller status change to `ACTIVE`.
+2.  The Admin can also view all comments and change their status from `PENDING` to `APPROVED` (moderation).
+
+### 3. Seller Workflow
+1.  **Login** as the approved (`Active`) Seller.
+2.  Create items (`Game Objects`) in your inventory and link them to games.
+
+### 4. Public & Guests
+1.  View the public seller catalog (filtering by rating and games is available).
+2.  Leave comments for sellers (as an Anonymous Guest). The comment will get a `PENDING` status and will not affect the rating until approved by an Admin.
+3.  If a seller does not exist, you can submit a request to create one (Anonymous Request).
